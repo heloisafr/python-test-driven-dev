@@ -4,7 +4,8 @@ import pytest
 
 def test_call_required_send_required_ok(client, test_folder) -> None:
     """
-    Nesse end-point o envio do arquivo é obrigatorio
+    In this end-point it is required to send a file
+    Tests if send file is ok
     """
     file = "sample_file.txt"
     file_path = os.path.join(test_folder, file)
@@ -15,6 +16,36 @@ def test_call_required_send_required_ok(client, test_folder) -> None:
     assert response.json()["ok"] is True
     assert response.json()["filename"] == "sample_file.txt"
     assert response.json()["content_type"] == "text/plain"
+
+
+def test_call_required_missing_error(client, test_folder) -> None:
+    """
+    In this end-point it is required to send a file
+    Tests the error when the file is missing
+    """
+    response = client.post("/api/file/required")
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]['type'] == "missing"
+    assert response.json()["detail"][0]['msg'] == "Field required"
+    assert response.json()["detail"][0]['loc'][1] == "sample_file"
+
+
+def test_call_required_content_type_error(client, test_folder) -> None:
+    """
+    In this end-point is required to send a file
+    Tests the error when the file's content_type is unexpected
+    """
+    file = "sample_file.txt"
+    file_path = os.path.join(test_folder, file)
+    with open(file_path, "rb") as f:
+        response = client.post(
+            "/api/file/required",
+            files={"sample_file": (file, f, "application/json")}
+        )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Sample file should be plain text."
 
 
 def test_call_optional_send_empty_ok(client, test_folder) -> None:

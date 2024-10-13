@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, File, UploadFile
+from fastapi import APIRouter, Form, File, HTTPException, status, UploadFile
 
 router_files = APIRouter()
 
@@ -10,6 +10,13 @@ def add_file_required(sample_file: UploadFile = File(...)):
     sample_file: UploadFile = File(...) (explicitamente dizendo que é um arquivo e obrigatorio)
     sample_file: UploadFile (sem nada mesmo, a fastapi entende que é obrigatório)
     """
+    # This is a naive way to test the content_type
+    if sample_file.content_type != "text/plain":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Sample file should be plain text."
+        )
+
     return ({
         "ok": True,
         "filename": sample_file.filename,
